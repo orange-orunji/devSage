@@ -1,0 +1,50 @@
+# Minimal dependency set for tests/test_smoke_p0.py (the 5 P0 smoke tests).
+#
+# Derived from the ACTUAL import chains of those tests, so CI does not pay
+# for the heavy runtime stack they never import (torch / sentence-transformers
+# are GBs of download). Chain analysis:
+#
+#   P0-1  import langgraph.checkpoint.sqlite.aio
+#         -> langgraph-checkpoint-sqlite (langgraph-checkpoint transitive).
+#         NOTE: `langgraph` itself is NOT listed here, not because the
+#         package is unused, but because these 5 tests happen not to touch
+#         langgraph.graph / langgraph.types (StateGraph / Command /
+#         interrupt / ToolNode), which the rest of the project DOES use
+#         (app/agent/agent.py, app/api/chat.py,
+#         app/services/tools/status_tool.py). It is only omitted from this
+#         CI-only file; the real user install (requirements.txt) keeps it,
+#         and requirements.txt is guarded separately by the full-install
+#         job in .github/workflows/test.yml (pip install -r requirements.txt
+#         + python -c "import main").
+#         Re-add `langgraph~=1.2.9` here if a test ever imports
+#         langgraph.graph / langgraph.types.
+#   P0-2  import app.services.vector_store
+#         -> embedding_factory (langchain_openai.OpenAIEmbeddings)
+#         -> langchain_chroma.Chroma (pulls chromadb transitively)
+#         -> app.config.settings (pydantic-settings)
+#         Note: settings declares SILICON_API_KEY as a REQUIRED field and
+#         vector_store instantiates it at import time, so CI exports a
+#         placeholder value (the smoke tests make no network requests).
+#   P0-3  import app.services.bm25_service -> jieba + rank-bm25 + numpy
+#   P0-4  app.config.settings -> pydantic-settings (already listed above)
+#   P0-5  stdlib only (codecs / pathlib)
+#
+# Versions mirror requirements.txt (the locally verified baseline, see
+# _clean_venv). Keep this file pure ASCII or UTF-8 BOM: pip on zh-CN Windows
+# decodes requirements files with the local GBK codec
+# (see tests/test_smoke_p0.py::test_requirements_files_are_portable).
+
+pytest~=9.1.1
+
+# P0-1: LangGraph sqlite checkpointer import (main.py: AsyncSqliteSaver)
+langgraph-checkpoint-sqlite~=3.1.1
+
+# P0-2: vector_store import chain
+langchain-openai~=1.3.4
+langchain-chroma~=1.1.0
+pydantic-settings~=2.14.2
+
+# P0-3: BM25 service import chain
+jieba~=0.42.1
+rank-bm25~=0.2.2
+numpy~=2.4.6

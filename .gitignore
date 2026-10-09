@@ -10,6 +10,9 @@ _clean_venv/
 # 敏感配置（API Key）
 .env
 
+# 个人上下文笔记（含求职背景等个人信息，勿提交到公开仓库）
+PROJECT_CONTEXT.md
+
 # IDE 配置
 .idea/
 .cursor/

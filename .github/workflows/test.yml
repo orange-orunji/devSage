@@ -1,0 +1,91 @@
+# CI：两个 job 分工拦截两类「干净环境装完就崩」的回归。
+#
+# job 1 · smoke（快，双 OS）
+#   装 requirements-ci.txt（tests/test_smoke_p0.py 的最小依赖集）跑 5 条 P0
+#   冒烟测试。含 windows-latest 的理由：P0-5 就是中文 Windows 的 pip 编码
+#   问题，只跑 Linux 永远发现不了。
+#
+# job 2 · full-install（慢，单 OS，但真实）
+#   装用户真实会装的完整 requirements.txt，验证应用的 import 面。smoke 的
+#   依赖集是按测试 import 链裁剪的，requirements.txt 本身缺包它拦不住
+#   （P0-1 langgraph-checkpoint-sqlite 正是这么漏掉的）；这个 job 是缺包
+#   回归的主防线。不下载 3.2GB 的 models/：import 阶段唯一的模型加载点
+#   rerank.py:5 被 scripts/ci_check_import.py stub 掉，torch /
+#   sentence_transformers 由该脚本显式 import 单独验证。
+#
+# 触发策略：master push 跑全部；PR 只在依赖面/安装面文件变更时跑
+# （requirements*.txt / Dockerfile / downLoad_models.py / main.py / 验收脚本 /
+# 本 workflow）——这正是缺包回归可能出现的方式，代码类 PR 不付 full-install
+# 的安装成本；另保留 workflow_dispatch 手动触发。
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    paths:
+      - "requirements.txt"
+      - "requirements-ci.txt"
+      - "Dockerfile"
+      - "downLoad_models.py"
+      - "main.py"
+      - "scripts/ci_check_import.py"
+      - ".github/workflows/test.yml"
+  workflow_dispatch:
+
+# settings 的必填字段在 CI 用占位值：CI 上没有 .env（.gitignore 忽略），
+# 而冒烟测试与 import 面检查都不发网络请求。
+# 注意：这里绝不能导出 OPENAI_API_KEY——P0-2 断言的就是进程没有它时
+# import app.services.vector_store 不炸。
+env:
+  SILICON_API_KEY: ci-placeholder-smoke-only
+  SMTP_HOST: ci.invalid
+  SMTP_USER: ci@example.invalid
+  SMTP_PASSWORD: ci-placeholder
+
+jobs:
+  # ── job 1 · smoke：快，双 OS ──────────────────────────────────
+  smoke:
+    name: smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # 双 OS 结果都要看到：windows 挂了不应取消还在跑的 ubuntu（反之亦然）
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          # 对齐 Dockerfile 的 python:3.11-slim（部署面）；本地开发机 3.13
+          # 已由探针环境（_ci_probe）日常覆盖
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+      - name: Install minimal test deps
+        run: pip install -r requirements-ci.txt
+      - name: Run P0 smoke tests
+        run: python -m pytest -v
+
+  # ── job 2 · full-install：慢，但验证的是用户真实安装 ─────────
+  full-install:
+    name: full-install (requirements.txt → import 面)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      # CPU 版 torch 预装：requirements.txt 不直接声明 torch（由
+      # sentence-transformers 传递引入），Linux 上 PyPI 默认 torch 会拖
+      # ~2.5GB 的 CUDA 依赖；先装 CPU 轮子（~200MB），下一步 pip 见
+      # torch 已满足就直接跳过 CUDA 版。
+      - name: Pre-install CPU-only torch
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Install full requirements.txt
+        run: pip install -r requirements.txt
+      - name: Verify app import surface against requirements.txt
+        run: python scripts/ci_check_import.py

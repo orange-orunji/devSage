@@ -1,5 +1,7 @@
 # DevSage · 研发智库
 
+[![CI](https://github.com/orange-orunji/devSage/actions/workflows/test.yml/badge.svg)](https://github.com/orange-orunji/devSage/actions/workflows/test.yml)
+
 面向研发团队的技术知识库 Agent——基于 FastAPI + **LangGraph** + Vue 3 + Chroma + RabbitMQ + Redis 构建。让工程师在散落的技术规范、方案与复盘文档里**秒级找到答案**，并完成从检索到交付（报告生成 / 格式转换 / 邮件发送）的完整闭环。
 
 ---
@@ -269,7 +271,7 @@ pip install -r requirements.txt
 ### 2. 下载模型
 
 ```bash
-python download_models.py
+python downLoad_models.py
 ```
 
 ### 3. 配置环境变量
@@ -361,7 +363,7 @@ python scripts\maintenance.py retry 7,8,9      # 管理评测断点（重跑指�
 cp .env.example .env   # 填入 SILICON_API_KEY / DASHSCOPE_API_KEY
 
 # 2. 下载 Reranker 模型到 models/ 目录（首次需要，会被打包进镜像）
-python download_models.py
+python downLoad_models.py
 
 # 3. 一键启动
 docker compose up -d --build
