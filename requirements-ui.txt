@@ -1,6 +1,6 @@
-# 可选 Streamlit 前端依赖（主前端为 app/static 纯 HTML）
-# 启动方式：streamlit run app/ui.py
-# 说明：UI 是独立客户端，仅需本文件依赖，无需安装主依赖
+# Optional Streamlit frontend dependencies (the main frontend is plain HTML under app/static)
+# Run with: streamlit run app/ui.py
+# Note: the UI is a standalone client and only needs this file; the main requirements are not needed
 
 streamlit~=1.59.1
 streamlit-cookies-manager~=0.2.0

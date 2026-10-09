@@ -21,7 +21,8 @@ class BM25Service:
         # 切割文本
         self.tokenizes_content = [list(jieba.cut(doc.page_content)) for doc in documents]
         # 获取bm25模型并投喂切割后的文本内容
-        self.bm25 = BM25Okapi(self.tokenizes_content)
+        # 空语料守卫：BM25Okapi 构造遇到空语料会除零（rank_bm25 不接受空库），置 None 表示空索引
+        self.bm25 = BM25Okapi(self.tokenizes_content) if self.tokenizes_content else None
 
     def search(self,query : str,top_k:int=10):
         """
@@ -47,6 +48,7 @@ class BM25Service:
         new_tokens = [list(jieba.cut(doc.page_content)) for doc in new_docs]
         self.documents.extend(new_docs)
         self.tokenizes_content.extend(new_tokens)
-        self.bm25 = BM25Okapi(self.tokenizes_content)  # BM25Okapi 本身不支持增量，但数据量小时重建也很快
+        # 空语料守卫同 build_index：空语料置 None，避免 BM25Okapi 除零
+        self.bm25 = BM25Okapi(self.tokenizes_content) if self.tokenizes_content else None  # BM25Okapi 本身不支持增量，但数据量小时重建也很快
 
 bm25_service = BM25Service()

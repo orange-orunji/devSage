@@ -1,6 +1,5 @@
 from app.services.embedding_factory import get_embedding
 from langchain_chroma import Chroma
-from langchain_openai import ChatOpenAI
 
 from app.config.settings import get_settings
 
@@ -9,12 +8,6 @@ class VectorStoreService:
     def __init__(self, embedding_model=None):
         self.embedding = embedding_model
         self.s = get_settings()
-        self.llm = ChatOpenAI(
-            model=self.s.SILICON_MODEL,
-            base_url=self.s.SILICON_BASE_URL,
-            streaming=True,
-            callbacks=[]
-        )
         # 想用框架自带的HyDe检索,但好像换包了暂时找不到位置先遗弃此方案
         self.base_embedding = get_embedding()
         # self.hyde_retrieve = HypotheticalDocumentEmbedder.from_llm(llm=self.llm,

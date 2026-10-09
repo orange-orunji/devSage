@@ -1,9 +1,11 @@
 # Python
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
 # 虚拟环境
 .venv/
+_clean_venv/
 
 # 敏感配置（API Key）
 .env
@@ -41,6 +43,9 @@ langgraph_text/
 
 # 演示素材原片（体积大，仅提交裁剪后的 GIF）
 docs/show/*.mp4
+
+# 个人简历（含联系方式，勿提交到公开仓库）
+docs/resume/
 
 # Vue 前端
 frontend/node_modules/

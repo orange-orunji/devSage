@@ -1,4 +1,4 @@
-# 开发 / 测试依赖（不进入 Docker 镜像）
+# Dev / test dependencies (not included in the Docker image)
 -r requirements.txt
 
 pytest~=9.1.1
