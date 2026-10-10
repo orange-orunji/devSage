@@ -40,6 +40,7 @@ on:
 # import app.services.vector_store 不炸。
 env:
   SILICON_API_KEY: ci-placeholder-smoke-only
+  DASHSCOPE_API_KEY: ci-placeholder-smoke-only
   SMTP_HOST: ci.invalid
   SMTP_USER: ci@example.invalid
   SMTP_PASSWORD: ci-placeholder

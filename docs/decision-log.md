@@ -45,3 +45,54 @@
 
 **已知限制**：CPU-torch 规避 CUDA 的实际耗时需 CI 首跑确认；README 徽章在
 workflow 落到 master 前显示为 unknown。
+
+## 2026-10-10 DASHSCOPE_API_KEY 空串防护：配置显式化（CI 全红牵出）
+
+**背景**：CI 双 job 首跑全红——smoke 的 P0-2（test_vector_store_imports_without_openai_key）
+与 full-install 的 `import main` 同链失败，根因不在代码而在 workflow 的 env：
+只占位了 SILICON_API_KEY / SMTP_*，漏了 DASHSCOPE_API_KEY。CI 上没有 .env，
+settings 取默认值 `""`，`OpenAIEmbeddings(api_key="")`（embedding_factory.py）在
+client 构造时抛 `OpenAIError: Missing credentials ... OPENAI_API_KEY`。
+深层暴露面：vector_store.py 模块级实例化（P0-2 修复后的现状）使 import 即构造，
+embedding 工厂被 vector_store / semantic_cache / KnowledgeBase_md5_service
+三处模块级共享，一处空串全链皆崩。
+
+**机制核查**（实测 langchain-openai 1.3.5 / openai 2.45.0，修正了最初的前提）：
+
+- openai SDK 的 env 兜底只发生在 `api_key=None`（根本不传）时；显式空串原样
+  保留，缺凭证判定是 falsy 检查 → 空串 = 构造即炸，且 OPENAI_API_KEY **不被读取**
+- 因此「拿错 key 连 DashScope」在当前锁定版本上不成立；真实危害是：
+  ① 失败时点晚于配置校验（uvicorn 启动崩 / Docker 容器 unless-stopped 无限重启）；
+  ② 报错指向本项目不存在的配置项 OPENAI_API_KEY，且照报错 export 也修不好（空串
+  短路了 env 读取），排障方向被误导；
+  ③ 该行为是 SDK 实现细节而非契约——未来若 SDK 对空串也兜底，会退化成真正的错连
+
+**选项**：
+
+- A. workflow env 补占位——必做（CI 无 .env），但只治 CI 不治模式
+- B. settings 必填（`DASHSCOPE_API_KEY: str`）——必填只拦「未配置」，拦不住
+  「配置了但为空串」：.env 写 `KEY=`（占位忘填）、Docker env_file 空值、CI 键
+  不带值，三条路径都产生空串，恰是 Docker 无限重启的触发路径
+- B+. `Field(..., min_length=1)`——把空串这一档也盖住
+- C. 工厂层守卫（get_embedding 空串时 raise 带指引的错误）
+- D. 传哨兵值绕开 SDK 兜底
+
+**决策**：A + B+，不做 C / D。理由：
+
+- B+ 后工厂永远拿不到空串（get_settings 是 lru_cache 单例，校验先行），C 是死代码
+- 失败时点最早（settings 构造即 ValidationError，字段直接点名），报错从误导性的
+  "Missing credentials ... OPENAI_API_KEY" 变为 pydantic 点名 DASHSCOPE_API_KEY
+- 与 SILICON_API_KEY / SMTP_* 的既有必填约定一致，是 P0-4「配置显式化」精神的延续
+- D 与 SDK 实现细节搏斗，脆弱
+
+**验证**：
+
+- 空串注入（shell 环境变量覆盖 .env）→ ValidationError 点名 DASHSCOPE_API_KEY
+  （string_too_short, min_length=1）✅
+- 正常值通过；5 条 P0 冒烟测试全绿，无回归
+- workflow env 补 DASHSCOPE_API_KEY 占位；requirements-ci.txt 头注释同步为
+  「SILICON_API_KEY / DASHSCOPE_API_KEY 均为必填」
+
+**边界说明**：BOCHA_API_KEY 仍默认 `""`——联网兜底是可选功能，key 缺失属功能
+降级而非崩溃，不套用本决策；CI 占位值只为满足「配置面存在」，真实 key 永远
+不进 workflow（冒烟与 import 面检查均不发网络请求）。

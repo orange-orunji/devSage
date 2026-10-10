@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Tuple, Literal
 from functools import lru_cache
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # 获取项目根目录（settings.py 位于 app/config/ 下，往上三层才是根目录）
@@ -36,7 +36,11 @@ class settings(BaseSettings):
 
     # —— 联网搜索（博查 Bocha，二期 web_search 用）——
     BOCHA_API_KEY: str = ""
-    DASHSCOPE_API_KEY: str = ""
+    # min_length=1：必填（Field(...)）只拦「未配置」，拦不住「配置了但为空串」——
+    # .env 写 DASHSCOPE_API_KEY=（占位忘填）、Docker env_file 空值、CI 键不带值
+    # 都产生空串；空串会让 OpenAIEmbeddings 在 client 构造时抛误导性的
+    # "Missing credentials ... OPENAI_API_KEY"（决策记录见 docs/decision-log.md 2026-10-10）
+    DASHSCOPE_API_KEY: str = Field(..., min_length=1)
 
     # ── Embedding 配置（DashScope OpenAI 兼容接口）──
     # text-embedding-v4 免费额度用完后转按量付费：0.5 元/百万 Token，项目全量用量不到 0.5 元

@@ -22,9 +22,10 @@
 #         -> embedding_factory (langchain_openai.OpenAIEmbeddings)
 #         -> langchain_chroma.Chroma (pulls chromadb transitively)
 #         -> app.config.settings (pydantic-settings)
-#         Note: settings declares SILICON_API_KEY as a REQUIRED field and
-#         vector_store instantiates it at import time, so CI exports a
-#         placeholder value (the smoke tests make no network requests).
+#         Note: settings declares SILICON_API_KEY / DASHSCOPE_API_KEY as
+#         REQUIRED fields and vector_store instantiates them at import
+#         time, so CI exports placeholder values (the smoke tests make
+#         no network requests).
 #   P0-3  import app.services.bm25_service -> jieba + rank-bm25 + numpy
 #   P0-4  app.config.settings -> pydantic-settings (already listed above)
 #   P0-5  stdlib only (codecs / pathlib)
