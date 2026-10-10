@@ -8,6 +8,13 @@
 
 运行：python -m app.rebuild_kb
 """
+import os
+import sys
+
+# 直接运行（python app/rebuild_kb.py）时 sys.path[0] 是 app/，补上仓库根，
+# 与 `python -m app.rebuild_kb` 两种跑法等价
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from langchain_chroma import Chroma
 
 from app.config.settings import get_settings

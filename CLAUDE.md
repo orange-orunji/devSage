@@ -27,7 +27,7 @@ python downLoad_models.py
 # Docker 一键部署（Redis + RabbitMQ + Worker + API，应用在 8001）
 docker compose up -d --build
 
-# 更换 EMBEDDING_MODEL 后必须全量重建知识库
+# 更换 EMBEDDING_MODEL / 供应商后必须全量重建知识库（当前 Embedding：智谱 embedding-3）
 python -m app.rebuild_kb
 ```
 
@@ -67,9 +67,9 @@ python scripts\maintenance.py clear-cache      # 清 Redis 缓存（清后建议
 python scripts\maintenance.py retry 7,8,9      # 管理评测断点
 ```
 
-- `python app/eval_agent.py`：Agent 端到端 38 题五分类评测（目标 `http://127.0.0.1:8010`，注册用户 test/123456；内置 8 req/min 节流以避开服务端 10/min 限流；断点续跑落盘 `eval_agent_checkpoint.json`）
-- `python app/eval_retrieval.py`：检索层 Recall@K / MRR（300 条分类评测集 `app/eval_questions.json`）
-- `python app/eval_router.py`：查询意图路由器校准
+- `python -m app.eval_agent`：Agent 端到端 38 题五分类评测（目标 `http://127.0.0.1:8010`，注册用户 test/123456；内置 8 req/min 节流以避开服务端 10/min 限流；断点续跑落盘 `eval_agent_checkpoint.json`）
+- `python -m app.eval_retrieval`：检索层 Recall@K / MRR（300 条分类评测集 `app/eval_questions.json`）
+- `python -m app.eval_router`：查询意图路由器校准
 - 基线 38/38（100%）；改动 Agent 相关代码后用 `rerun.ps1` 回归
 
 ## 架构大图
@@ -106,7 +106,7 @@ START → reset（每轮上下文重置，防跨轮残留）
 
 ### 配置（`app/config/settings.py`）
 
-pydantic-settings 读根目录 `.env`（`SILICON_API_KEY` 必填；路径类默认值全部基于 `BASE_DIR`，**不要硬编码开发机内网 IP**）。聊天接口限流 10/min（slowapi，压测时用 `RATE_LIMIT_ENABLED=false` 关闭）。
+pydantic-settings 读根目录 `.env`（`SILICON_API_KEY` / `EMBEDDING_API_KEY` 必填；路径类默认值全部基于 `BASE_DIR`，**不要硬编码开发机内网 IP**）。聊天接口限流 10/min（slowapi，压测时用 `RATE_LIMIT_ENABLED=false` 关闭）。
 
 ## 已知约束与坑
 

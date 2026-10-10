@@ -10,7 +10,7 @@
 运行前提：
   1) 后端已启动（BASE 可配）
   2) 建议先清 Redis 缓存，保证冷缓存基线不被历史条目污染
-用法：python app/eval_agent.py
+用法：python -m app.eval_agent（或 python app/eval_agent.py，已做路径引导）
 """
 import asyncio
 import json

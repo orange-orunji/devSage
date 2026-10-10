@@ -96,3 +96,64 @@ embedding 工厂被 vector_store / semantic_cache / KnowledgeBase_md5_service
 **边界说明**：BOCHA_API_KEY 仍默认 `""`——联网兜底是可选功能，key 缺失属功能
 降级而非崩溃，不套用本决策；CI 占位值只为满足「配置面存在」，真实 key 永远
 不进 workflow（冒烟与 import 面检查均不发网络请求）。
+
+## 2026-10-10 Embedding 供应商切换：阿里云百炼 → 智谱（键名供应商无关化）
+
+**背景**：百炼侧拿不到可用 API key——仅有 Coding Plan 类型的 `sk-ws-` key，
+不适用于 OpenAI 兼容端点，embedding 调用持续 401，检索链路整体瘫痪；智谱
+`https://open.bigmodel.cn/api/paas/v4` 已实测通过（embedding-3 → 2048 维，
+embedding-2 → 1024 维）。切换是阻断性问题而非优化项。
+
+**选项**：
+
+- A. 继续等百炼可用 key——外部依赖不可控，检索链路持续不可用
+- B. 切智谱 embedding-3（OpenAI 兼容接口，2048 维，已实测）
+- C. 切硅基流动 BAAI/bge-m3 等——仍需新申请 key（SILICON_API_KEY 实为
+  DeepSeek LLM 端点的 key，不通用），且未实测
+
+命名子决策：保留 `DASHSCOPE_API_KEY` 只换值 vs 改名 `EMBEDDING_API_KEY`。
+选后者——供应商名锁死在变量名里，下次换供应商又要改代码；OpenAI 兼容接口
+已把协议面统一，供应商差异应收敛到配置而非代码。
+
+**决策**：B + 键名供应商无关化。`DASHSCOPE_API_KEY → EMBEDDING_API_KEY`
+（min_length=1 空串守卫随名迁移，上一条决策的约束不变），`EMBEDDING_BASE_URL`
+默认值改智谱端点，`EMBEDDING_MODEL` 默认值改 embedding-3。代码中唯一该知道
+供应商的地方是配置。
+
+**验证**：
+
+- 代码面：ast 语法检查 + model_fields 断言（EMBEDDING_API_KEY 必填、
+  EMBEDDING_BASE_URL / EMBEDDING_MODEL 默认值正确、DASHSCOPE_API_KEY 已移除）✅
+- ① `python -m app.rebuild_kb` 全量重建完成（语料 38 → 39 切片，新增
+  smoke_upload.txt）；② 5 条 P0 冒烟复跑 5/5 绿 ✅
+- ③ 检索基线复测（`python -m app.eval_retrieval`，300 题全量、单次运行、
+  无重复实验）：
+
+  | 策略 | 百炼旧基线（38 切片） | 智谱新基线（39 切片） |
+  |------|----------------------|----------------------|
+  | hyde_plus_rerank_bm25 | Recall@1 57.67% / MRR 0.577 | Recall@1 57.33% / MRR 0.573 |
+  | adaptive_retrieve     | Recall@1 59.67% / MRR 0.597 | Recall@1 57.00% / MRR 0.570 |
+
+  表面差值为负，但不足以判断——逐题配对（McNemar 精确二项双侧 p）：
+
+  | 策略 | 都命中 | 旧独有 : 新独有 | 净变化 | p |
+  |------|--------|----------------|--------|---|
+  | hyde_plus_rerank_bm25 | 171 | 2 : 1 | −1 题 | ≈1.000 |
+  | adaptive_retrieve     | 163 | 16 : 8 | −8 题 | ≈0.152 |
+
+  结论：两个策略的变化统计上均不显著，无法断言智谱比百炼差；
+  adaptive_retrieve 净 −8 题有下降趋势但未达显著，**留作观察项**（后续语料
+  扩充或重复实验时复核）。
+  归因限制：本次对比中语料同时 38 → 39 切片（新增 smoke_upload.txt），差值
+  不能全部归因于 embedding 供应商切换。
+- ④ Agent 38 题回归（`.\scripts\rerun.ps1`）：待执行
+- 附带验证：路由器判定与 embedding 无关（IDF 基于文本），39 切片下实测
+  242/300，与旧口径（语义组 75.3% / 精确组 86.0%）一致
+
+**已知影响**：README 已同步新基线（功能亮点 / 路由校准 / 二期验收记录三处均带
+配对分析与归因限制注记）；二期验收记录中的 59.67% / 57.67% 为百炼 / 38 切片
+时期的历史结论，保留不改写；上一条决策记录中的 DASHSCOPE_API_KEY 是当时的
+字段名，历史记录不改写，本条完成改名迁移。
+
+**不改动项**：docs/ 面试准备文档中残留的 DashScope 表述（个人材料，作者自行
+更新）；README/decision-log 的版本历史条目；embedding_factory.py 的历史备注。

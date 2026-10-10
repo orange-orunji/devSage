@@ -5,7 +5,7 @@
 
 **项目有什么限制**
 ```aiignore
-- 依赖外部 API（DashScope），无网络不可用
+- 依赖外部 API（DeepSeek LLM / 智谱 Embedding），无网络不可用
 - 仅支持单用户本地部署，未做多租户隔离
 - 大文件（>10MB）上传性能较差
 ```

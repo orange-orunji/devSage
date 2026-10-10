@@ -9,8 +9,9 @@ from app.config.settings import get_settings
 必须通过 get_embedding() 获取模型，禁止各自硬编码——
 上次换 text-embedding-v4 时三处散落的初始化就是教训。
 
-切换模型只需改 settings 的 EMBEDDING_MODEL（走 DashScope OpenAI 兼容接口），
-但换模型 = 换向量空间，必须执行 python -m app.rebuild_kb 全量重建知识库。
+切换供应商/模型只需改 settings 的 EMBEDDING_API_KEY / EMBEDDING_BASE_URL /
+EMBEDDING_MODEL 三项（OpenAI 兼容接口，当前：智谱 embedding-3），
+但换供应商或换模型 = 换向量空间，必须执行 python -m app.rebuild_kb 全量重建知识库。
 
 历史备注：曾短暂切过 tongyi-embedding-vision-plus（多模态模型，不支持
 OpenAI 兼容接口，需 dashscope.MultiModalEmbedding 原生 SDK 封装），
@@ -23,8 +24,8 @@ def get_embedding() -> OpenAIEmbeddings:
     return OpenAIEmbeddings(
         model=s.EMBEDDING_MODEL,
         base_url=s.EMBEDDING_BASE_URL,
-        api_key=s.DASHSCOPE_API_KEY,
+        api_key=s.EMBEDDING_API_KEY,
         # 新版 langchain-openai 默认本地 tokenize 后传 token ID 数组，
-        # DashScope 兼容接口只收原始字符串，必须关掉（旧版默认就是关的）
+        # OpenAI 兼容接口（智谱/百炼等）只收原始字符串，必须关掉（旧版默认就是关的）
         check_embedding_ctx_length=False,
     )

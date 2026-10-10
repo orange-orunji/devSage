@@ -36,17 +36,17 @@ class settings(BaseSettings):
 
     # —— 联网搜索（博查 Bocha，二期 web_search 用）——
     BOCHA_API_KEY: str = ""
-    # min_length=1：必填（Field(...)）只拦「未配置」，拦不住「配置了但为空串」——
-    # .env 写 DASHSCOPE_API_KEY=（占位忘填）、Docker env_file 空值、CI 键不带值
-    # 都产生空串；空串会让 OpenAIEmbeddings 在 client 构造时抛误导性的
-    # "Missing credentials ... OPENAI_API_KEY"（决策记录见 docs/decision-log.md 2026-10-10）
-    DASHSCOPE_API_KEY: str = Field(..., min_length=1)
 
-    # ── Embedding 配置（DashScope OpenAI 兼容接口）──
-    # text-embedding-v4 免费额度用完后转按量付费：0.5 元/百万 Token，项目全量用量不到 0.5 元
-    # 注意：更换 EMBEDDING_MODEL 后必须全量重建知识库（python -m app.rebuild_kb）
-    EMBEDDING_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    EMBEDDING_MODEL: str = "text-embedding-v4"
+    # ── Embedding 配置（OpenAI 兼容接口；当前供应商智谱，变量名刻意与供应商无关）──
+    # 换供应商只改 .env 三行（EMBEDDING_API_KEY / EMBEDDING_BASE_URL / EMBEDDING_MODEL），
+    # 代码零改动；换供应商或换模型 = 换向量空间，必须全量重建知识库（python -m app.rebuild_kb）
+    # min_length=1：必填（Field(...)）只拦「未配置」，拦不住「配置了但为空串」——
+    # .env 写 EMBEDDING_API_KEY=（占位忘填）、Docker env_file 空值、CI 键不带值
+    # 都产生空串；空串会让 OpenAIEmbeddings 在 client 构造时抛误导性的
+    # "Missing credentials ... OPENAI_API_KEY"（决策记录见 docs/decision-log.md 2026-10-10 两条）
+    EMBEDDING_API_KEY: str = Field(..., min_length=1)
+    EMBEDDING_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4"
+    EMBEDDING_MODEL: str = "embedding-3"
 
     # ── chroma 配置 ──
     CHROMA_DIR: str = str(BASE_DIR / "app/data/storage/chroma_db")

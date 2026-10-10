@@ -2,7 +2,7 @@
 查询路由器校准脚本
 
 用途：
-1. 用评测集 43 条问题（前 30 条模糊组 + 后 13 条精确组）检验 query_router 的意图判定
+1. 用评测集问题（300 条，按 type 字段分模糊组/精确组）检验 query_router 的意图判定
 2. 打印每条问题的 max_IDF 数值分布，用于校准 IDF_THRESHOLD
 
 运行方式（项目根目录）：
@@ -12,8 +12,13 @@
 """
 import os
 import json
+import sys
 
 import jieba
+
+# 直接运行（python app/eval_router.py）时 sys.path[0] 是 app/，补上仓库根，
+# 与 docstring 推荐的 `python -m app.eval_router` 两种跑法等价
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.services.vector_store import vector_store_service as vs
 from app.services.bm25_service import bm25_service

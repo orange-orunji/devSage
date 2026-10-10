@@ -1,6 +1,14 @@
 import os
 import json
+import sys
 import time
+
+# 直接运行（python app/eval_retrieval.py）时 sys.path[0] 是 app/，仓库根不在
+# 搜索路径上，`from app...` 会 ModuleNotFoundError——补上仓库根，使
+# `python app/eval_retrieval.py` 与 `python -m app.eval_retrieval` 两种跑法等价
+# （同 scripts/ci_check_import.py、eval_agent.py 的既有做法）
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app.services.vector_store import vector_store_service as vs
 from app.services.bm25_service import bm25_service
 from app.services.hyde import hyde_plus_rerank_retrieve, hyde_retrieve,hyde_plus_rerank_bm25_retrieve,adaptive_retrieve

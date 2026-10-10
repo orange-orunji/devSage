@@ -60,7 +60,7 @@
 │   │   └── send_email ─ interrupt 人工审批 → SMTP 邮件发送 + 附件支持
 │   └── RAG 链（备选路径）─ LCEL + RunnableWithMessageHistory
 │       ├── HyDE 假设文档生成 
-│       ├── Chroma 向量检索（DashScope Embedding） 
+│       ├── Chroma 向量检索（智谱 Embedding·embedding-3） 
 │       ├── BM25 关键词索引（jieba 分词） 
 │       └── BGE-Reranker Cross-Encoder 重排序 
 ├── 双层缓存 
@@ -83,7 +83,7 @@ graph LR
     Q[用户问题] --> Cache{双层缓存命中?}
     Cache -->|命中| A[直接返回缓存答案]
     Cache -->|未命中| HyDE[HyDE 假设文档生成]
-    HyDE --> Emb[DashScope Embedding]
+    HyDE --> Emb[智谱 Embedding·embedding-3]
     Emb --> Vec[Chroma 向量检索]
     Q --> Jieba[jieba 分词]
     Jieba --> BM25[BM25 关键词召回]
@@ -142,7 +142,7 @@ sequenceDiagram
 - **记忆窗口与记忆类三层防御**：`trim_messages` 滑动窗口（发送封顶 20 条、`start_on="human"` 保工具对与轮次完整，工具密集对话裁剪零异常）；记忆类问句三层防御（缓存读侧拦截 + 写侧不缓存 + 跳过前置检索），修复“记忆类问句命中缓存返回陈旧答案”缺陷；router 数学跳过（“1+1”类 11.2s → 2.5s 直答）
 - **多用户认证与隔离**：JWT 认证 + HTTP Bearer Token，用户数据完全物理隔离
 - **会话管理**：新建、切换、重命名、删除会话，每个会话独立保持上下文
-- **查询意图路由器**：三层漏斗路由（正则精确标记 → 语料 IDF 稀有词信号 → 默认语义），300 题评测下语义组 75.3% / 精确组 86.0% 正确分流，检索层 Recall@1 59.67% 反超全量混合基线 2pp
+- **查询意图路由器**：三层漏斗路由（正则精确标记 → 语料 IDF 稀有词信号 → 默认语义），300 题评测下语义组 75.3% / 精确组 86.0% 正确分流；检索层当前基线 adaptive_retrieve Recall@1 57.00%（智谱 embedding-3 / 39 切片 / 300 题全量、单次运行），与百炼旧基线 59.67% 的差异经 McNemar 配对检验不显著（净 −8 题，p≈0.152），不能断言切换造成退步
 - **量化评估体系**：内置 Recall@K、MRR 自动化评测脚本与 300 条分类评测集（semantic/keyword 各 150），支持多种检索策略对比与路由阈值校准
 - **Vue 3 组件化前端**：Vue 3 + Vite 构建，登录/会话/聊天/审批卡片组件化拆分 + composables 状态管理（useAuth / useSessions / useMessages）；响应式数据驱动渲染（流式消息与审批状态机单一数据源），SSE 打字机 + Markdown 实时渲染等价移植；构建产物由 FastAPI 托管（旧 HTML 前端保底回退），开发期 Vite 热更新 + /api 代理联调
 
@@ -157,14 +157,14 @@ sequenceDiagram
 
 > ⚡ 核心发现：HyDE+Rerank 在语义模糊场景下提升最显著。详细实验分析见 [`EVALUATION.md`](./EVALUATION.md)。
 
-### 🧭 查询意图路由校准（300 条评测集，38 切片语料）
+### 🧭 查询意图路由校准（300 条评测集，39 切片语料）
 
 | 分组 | 路由判定正确率 | 说明 |
 |------|--------------|------|
 | 语义组（150 条） | 75.3% | CN_FACT_PATTERN 句式层将部分“为什么”句引入精确通道（双路为单路超集，检索层实测无损失） |
 | 精确组（150 条） | 86.0% | 中文精确句式模板上线后大涨（60.67% → 86.00%） |
 
-> 💡 路由器校准脚本 `app/eval_router.py`，评测集 `app/eval_questions.json`（type 标注 semantic/keyword）。分类正确率只是代理指标，最终收益以 Recall@K 对比为准——38 切片实测 adaptive 59.67% vs 全量混合 57.67%，详见 [`EVALUATION.md`](./EVALUATION.md) 实验三。
+> 💡 路由器校准脚本 `app/eval_router.py`，评测集 `app/eval_questions.json`（type 标注 semantic/keyword）。分类正确率只是代理指标，最终收益以 Recall@K 对比为准。检索层当前基线（智谱 embedding-3 / 39 切片 / 300 题全量、单次运行）：adaptive 57.00% vs 全量混合 57.33%；与百炼旧基线（adaptive 59.67% / 混合 57.67%，38 切片）逐题配对（McNemar）差异均不显著（p≈0.152 / 1.000）——语料同步 38→39 切片（新增 smoke_upload.txt），差值不能全归因于换模型，adaptive 净 −8 题留作观察项；切换决策与配对分析见 [`docs/decision-log.md`](./docs/decision-log.md)，百炼时期实验见 [`EVALUATION.md`](./EVALUATION.md) 实验三。路由判定基于文本 IDF、与 embedding 无关：切供应商后复测 242/300，与表中口径一致。
 
 ## ⚡ 性能压测（2026-08-14 实测）
 
@@ -286,9 +286,13 @@ cp .env.example .env
 
 ```ini
 SILICON_API_KEY=你的API_KEY
-DASHSCOPE_API_KEY=你的API_KEY
 SILICON_BASE_URL=https://api.deepseek.com
 SILICON_MODEL=deepseek-chat
+
+# Embedding（OpenAI 兼容接口，当前供应商智谱；变量名与供应商无关，换供应商只改这三行）
+EMBEDDING_API_KEY=你的API_KEY
+EMBEDDING_BASE_URL=https://open.bigmodel.cn/api/paas/v4
+EMBEDDING_MODEL=embedding-3
 
 # 邮件发送（可选，使用邮件功能时需要）
 SMTP_HOST=smtp.qq.com
@@ -360,7 +364,7 @@ python scripts\maintenance.py retry 7,8,9      # 管理评测断点（重跑指�
 
 ```bash
 # 1. 配置 API Key（必填）
-cp .env.example .env   # 填入 SILICON_API_KEY / DASHSCOPE_API_KEY
+cp .env.example .env   # 填入 SILICON_API_KEY / EMBEDDING_API_KEY
 
 # 2. 下载 Reranker 模型到 models/ 目录（首次需要，会被打包进镜像）
 python downLoad_models.py
@@ -469,6 +473,8 @@ docker compose up -d --build
 **二期校准结论**（38 切片，300 条，见 EVALUATION.md 实验三）：语义组分类正确率 75.3%、精确组 86.0%（中文句式上线后 60.67% → 86.00%）；CN_FACT_PATTERN 将精确组丢分从 -7.29pp 收窄至 -2.19pp，检索层 Recall@1 59.67% 反超全量混合基线 2pp，验收通过。
 
 **验收指标**：38 切片实测 adaptive_retrieve Recall@1 59.67% vs 全量混合 57.67%，反超 2pp；语义两组 +6.67pp/+5.83pp，精确组丢分仅剩 -2.19pp（3 题，均为中文句式变体）。
+
+> 📌 2026-10-10 切换智谱 embedding-3（39 切片）后复测：hyde_plus_rerank_bm25 57.33% / adaptive_retrieve 57.00%，McNemar 配对检验较百炼旧基线均不显著（p≈1.000 / 0.152）——上文「反超 2pp」为百炼 / 38 切片时期的验收结论，此处保留为历史记录；配对分析与归因限制详见 [`docs/decision-log.md`](./docs/decision-log.md)。
 
 **远期计划**
 
