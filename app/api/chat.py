@@ -15,6 +15,7 @@ from langgraph.types import  Command
 
 from app.agent.agent import get_agent, get_checkpointer
 from app.api.auth import current_user_ctx
+from app.api.revocation_demo import is_demo_session, stream_demo_chat
 from app.schemas.chat import ChatRequest, RenameRequest, HistoryResponse, SessionListResponse, SessionActionResponse ,ResumeRequest
 from app.services.history_service import get_file_chat_history
 from app.services.hyde import llm
@@ -105,6 +106,15 @@ def _generate_session_title(question: str) -> str:
 async def stream_chat(request: Request, body: ChatRequest, current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["user_id"])
     t_start = time.time()
+    if is_demo_session(body.session_id):
+        return await stream_demo_chat(
+            question=body.question,
+            session_id=body.session_id,
+            user_id=current_user["user_id"],
+            memory_only=_is_memory_request(body.question),
+            llm=llm,
+            history_factory=get_file_chat_history,
+        )
     if redis and not _is_action_request(body.question) and not _is_memory_request(body.question):
         # 1. 语义相似度缓存
         cached_answer = semantic_cache.lookup(body.question, user_id)
