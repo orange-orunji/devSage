@@ -34,7 +34,14 @@ class SemanticCache:
         # 逐条计算余弦相似度，取最大值（不再用 np.vstack 全量矩阵）
         best_score = -1.0
         best_idx = -1
+        user_prefix = (
+            f"{self._settings.REDIS_USER_PREFIX}:semantic:{user_id}:"
+        )
+
         for i, cached_vec in enumerate(self._question_vecs):
+            if not self._redis_keys[i].startswith(user_prefix):
+                continue
+
             score = float(np.dot(cached_vec, query_vec))
             if score > best_score:
                 best_score = score
