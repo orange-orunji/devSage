@@ -24,6 +24,19 @@ llm = ChatOpenAI(
     callbacks=[]
 )
 
+
+def _should_hyde(question: str, route: str) -> bool:
+    """是否启用 HyDE：auto 模式下仅语义类且长度足够时启用。"""
+    mode = (getattr(s, "HYDE_MODE", "auto") or "auto").lower()
+    if mode == "off":
+        return False
+    if mode == "on":
+        return True
+    # auto：只对“很短的关键词式查询”跳过 HyDE（BM25 已足够），
+    # 正常长度的提问一律保留 HyDE，避免影响召回质量
+    min_chars = getattr(s, "HYDE_MIN_CHARS", 12)
+    return len(question.strip()) >= min_chars
+
 def generate_hypothetical(question : str) -> str:
     prompt = ChatPromptTemplate.from_messages([
         ("system", "你是一个文档写作助手。请根据用户的问题，写一段可能出现在相关文档中的答案/假想文本"),
@@ -38,22 +51,28 @@ def hyde_retrieve(question : str,k : int = 3):
 
 # rerank后hyde检索
 def hyde_plus_rerank_retrieve(question : str, k : int = 3):
-    vector = _vs.get_vector(query=generate_hypothetical(question), k=k)
+    use_hyde = _should_hyde(question, "semantic")
+    q = generate_hypothetical(question) if use_hyde else question
+    vector = _vs.get_vector(query=q, k=k)
     return rerank(query=question,docs=vector,top_k=k)
 
     #hy​de检索后进行BM25计算后返回rank
 def hyde_plus_rerank_bm25_retrieve(question : str, k_vector: int = 15, k_keyword: int = 10, final_k: int = 3):
-    t_start = time.time()
-    # 1.HyDE 假想向量检索
-    t0 = time.time()
-    hypo_text = generate_hypothetical(question)
-    vector = _vs.get_vector(query=hypo_text, k=k_vector)
-    logger.info("HyDE 生成+向量检索 | 耗时=%.2fs | 召回=%d | query=%s", time.time() - t0, len(vector), question[:50])
+    from concurrent.futures import ThreadPoolExecutor
 
-    # 2.BM25 关键词检索
+    t_start = time.time()
+
+    # 1 + 2. BM25 与 HyDE 并行：BM25 不依赖 HyDE 结果
     t0 = time.time()
-    search = service.search(question, top_k=k_keyword)
-    logger.info("BM25 关键词检索 | 耗时=%.2fs | 召回=%d", time.time() - t0, len(search))
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        bm25_future = pool.submit(service.search, question, k_keyword)
+        use_hyde = _should_hyde(question, "keyword")
+        hypo_text = generate_hypothetical(question) if use_hyde else question
+        vector = _vs.get_vector(query=hypo_text, k=k_vector)
+        logger.info("HyDE=%s 向量检索 | 耗时=%.2fs | 召回=%d | query=%s",
+                    "开" if use_hyde else "跳过", time.time() - t0, len(vector), question[:50])
+        search = bm25_future.result()
+    logger.info("BM25 关键词检索（并行）| 耗时=%.2fs | 召回=%d", time.time() - t0, len(search))
 
     # 3. RRF 倒数排名融合（替代旧的暴力拼接去重）
     # 分数 = Σ 1/(k + rank)，k=60；只看排名不看原始分数，免归一化
