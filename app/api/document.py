@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uuid
 
@@ -8,6 +9,7 @@ from app.services.vector_store import vector_store_service as vss
 from app.utils.auth import get_current_user
 from app.utils.rabbitmq import rabbitmq
 from app.utils.redis_client import get_redis
+from app.utils.task_handler import process_document_inline
 from app.utils.task_status import TaskTracker, TaskStatus
 
 logger = logging.getLogger("rag.upload")
@@ -38,19 +40,31 @@ async def document_upload(file: UploadFile = File(..., description="待上传的
 
     TaskTracker.set_status(task_id, TaskStatus.PENDING, {"filename": file.filename})
 
-    await rabbitmq.publish("document.upload", {
-        "task_id": task_id,
-        "filename": file.filename,
-        "user_id": current_user["user_id"],
-    })
+    # ★ 优先走队列；队列不可用（未启动/断连）时降级为本进程同步处理，
+    #   避免直接抛 500 导致上传功能整体失效（缺陷 D-01）。
+    degraded = False
+    try:
+        await rabbitmq.publish("document.upload", {
+            "task_id": task_id,
+            "filename": file.filename,
+            "user_id": current_user["user_id"],
+        })
+    except Exception as exc:
+        degraded = True
+        logger.warning("RabbitMQ 不可用，上传转为同步处理 | task_id=%s | err=%s", task_id, exc)
+        asyncio.create_task(
+            process_document_inline(task_id, file.filename, content, current_user["user_id"])
+        )
 
-    logger.info("接收上传 | task_id=%s | filename=%s | 大小=%dKB | user=%s",
-                task_id, file.filename, len(content) // 1024, current_user["user_id"])
+    logger.info("接收上传 | task_id=%s | filename=%s | 大小=%dKB | user=%s | 队列=%s",
+                task_id, file.filename, len(content) // 1024, current_user["user_id"],
+                "降级" if degraded else "正常")
 
     return UnifiedResponse.success(
         code=202,
-        data={"task_id": task_id},
-        message=f"文件 {file.filename} 已接收，正在异步处理中"
+        data={"task_id": task_id, "degraded": degraded},
+        message=(f"文件 {file.filename} 已接收，队列不可用，正在同步处理中"
+                 if degraded else f"文件 {file.filename} 已接收，正在异步处理中")
     )
 
 @router.get("/upload/status/{task_id}", summary="查询上传任务状态")
