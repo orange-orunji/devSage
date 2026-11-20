@@ -1445,3 +1445,6 @@ svg { flex-shrink: 0; }
 .btn-kb-manage:hover { background: #f3f6fb; border-color: #c7d7ee; color: #2b6cb0; }
 [data-theme="dark"] .btn-kb-manage { background: #1f2430; border-color: #333a48; color: #cbd5e1; }
 [data-theme="dark"] .btn-kb-manage:hover { background: #262c3a; border-color: #3d4757; color: #8ab4f8; }
+
+/* 文档管理：普通用户只读标记 */
+.op-readonly { font-size: 12px; color: #9ca3af; }

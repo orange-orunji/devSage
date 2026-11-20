@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useAuth } from '../composables/useAuth'
 
 const emit = defineEmits(['back'])
-const { apiFetch } = useAuth()
+const { apiFetch, isAdmin } = useAuth()
 
 const loading = ref(true)
 const error = ref('')
@@ -157,17 +157,21 @@ onMounted(load)
                         <td class="num">{{ it.chunks }}</td>
                         <td class="time">{{ fmtTime(it.create_time) }}</td>
                         <td class="op">
-                            <button class="btn-del" :disabled="busyName === it.name"
+                            <button v-if="isAdmin" class="btn-del" :disabled="busyName === it.name"
                                     @click="removeDoc(it.name)">
                                 {{ busyName === it.name ? '删除中…' : '删除' }}
                             </button>
+                            <span v-else class="op-readonly">只读</span>
                         </td>
                     </tr>
                     </tbody>
                 </table>
             </section>
 
-            <p class="kb-tip">删除会同时移除该文件的全部切片并重建 BM25 索引，操作不可恢复。</p>
+            <p class="kb-tip">
+                删除会同时移除该文件的全部切片并重建 BM25 索引，操作不可恢复；
+                <strong>仅管理员可删除</strong>，普通用户为只读。
+            </p>
         </div>
 
         <transition name="fade">

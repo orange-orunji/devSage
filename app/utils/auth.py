@@ -44,3 +44,9 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         return payload  # {"user_id": 1, "sub": "test", ...}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="无效的 Token")
+
+def require_admin(payload: dict = Depends(get_current_user)) -> dict:
+    """管理员依赖：令牌中 role 必须为 admin，否则 403。"""
+    if (payload.get("role") or "user") != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="需要管理员权限")
+    return payload

@@ -85,6 +85,7 @@ async def lifespan(app: FastAPI):
             ("display_name", "VARCHAR DEFAULT ''"),
             ("avatar", "VARCHAR DEFAULT ''"),
             ("bio", "VARCHAR DEFAULT ''"),
+            ("role", "VARCHAR DEFAULT 'user'"),
         ):
             if col not in cols:
                 conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} {ddl}"))

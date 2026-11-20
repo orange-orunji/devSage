@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from app.api.auth import get_current_user
+from app.utils.auth import get_current_user, require_admin
 from app.config.settings import get_settings
 from app.schemas.response import UnifiedResponse
 from app.services.bm25_service import bm25_service
@@ -50,7 +50,7 @@ async def list_documents(current_user: dict = Depends(get_current_user)) -> Unif
 
 
 @router.post("/delete", summary="删除文档及其切片")
-async def delete_document(body: DeleteRequest, current_user: dict = Depends(get_current_user)) -> UnifiedResponse:
+async def delete_document(body: DeleteRequest, current_user: dict = Depends(require_admin)) -> UnifiedResponse:
     name = (body.name or "").strip()
     if not name:
         return UnifiedResponse.error(code=400, message="文件名不能为空")

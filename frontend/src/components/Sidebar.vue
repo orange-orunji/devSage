@@ -8,7 +8,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'open-settings', 'open-documents'])
 
-const { logout, shownName, avatarUrl, bio } = useAuth()
+const { logout, shownName, avatarUrl, bio, role } = useAuth()
 const {
     searchText, sessionGroups, currentSessionId, titleOf,
     loadSessions, createSession, switchSession, deleteSession, renameSession,
@@ -95,7 +95,7 @@ async function onDelete(sessionId) {
             </div>
             <div class="sidebar-user-info">
                 <span class="sidebar-username">{{ shownName }}</span>
-                <span class="sidebar-user-role">{{ bio || '普通用户' }}</span>
+                <span class="sidebar-user-role">{{ (role === 'admin' ? '管理员' : '普通用户') }}{{ bio ? ' · ' + bio : '' }}</span>
             </div>
             <button class="btn-gear" title="个人设置">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
