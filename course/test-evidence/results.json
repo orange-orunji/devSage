@@ -1,0 +1,264 @@
+{
+ "user": "t_ctg6j",
+ "ran_at": "2026-11-20 13:04:14",
+ "base": "http://127.0.0.1:9000",
+ "results": [
+  {
+   "id": "MISC-01",
+   "name": "服务健康检查",
+   "module": "基础",
+   "expected": "200 且 status=ok",
+   "actual": "200 {\"status\":\"ok\",\"service\":\"RAG Personal A",
+   "status": "PASS",
+   "ms": 8,
+   "note": ""
+  },
+  {
+   "id": "AUTH-01",
+   "name": "注册新用户",
+   "module": "M1 认证",
+   "expected": "200 注册成功",
+   "actual": "200 {\"message\":\"用户注册成功\",\"access_token\":null,\"token_type\":null}",
+   "status": "PASS",
+   "ms": 18,
+   "note": ""
+  },
+  {
+   "id": "AUTH-02",
+   "name": "重复注册被拒",
+   "module": "M1 认证",
+   "expected": "4xx 提示已存在",
+   "actual": "400 {\"detail\":\"用户已存在\"}",
+   "status": "PASS",
+   "ms": 5,
+   "note": ""
+  },
+  {
+   "id": "AUTH-03",
+   "name": "正确口令登录",
+   "module": "M1 认证",
+   "expected": "200 且返回 access_token",
+   "actual": "200 token_len=144",
+   "status": "PASS",
+   "ms": 22,
+   "note": ""
+  },
+  {
+   "id": "AUTH-04",
+   "name": "错误口令登录",
+   "module": "M1 认证",
+   "expected": "401 不返回令牌",
+   "actual": "400 {\"detail\":\"用户或密码错误\"}",
+   "status": "FAIL",
+   "ms": 14,
+   "note": ""
+  },
+  {
+   "id": "AUTH-05",
+   "name": "令牌换取用户信息",
+   "module": "M1 认证",
+   "expected": "200 且 username 一致",
+   "actual": "200 {\"username\":\"t_ctg6j\",\"display_name\":\"\",\"avatar\":\"\",\"bio\":\"\"",
+   "status": "PASS",
+   "ms": 23,
+   "note": ""
+  },
+  {
+   "id": "AUTH-06",
+   "name": "无令牌访问受保护接口",
+   "module": "M1 认证",
+   "expected": "401",
+   "actual": "401",
+   "status": "PASS",
+   "ms": 13,
+   "note": ""
+  },
+  {
+   "id": "AUTH-07",
+   "name": "修改密码并复登录",
+   "module": "M1 认证",
+   "expected": "200 且新密码可登录",
+   "actual": "改密=200, 新密码登录=200",
+   "status": "PASS",
+   "ms": 76,
+   "note": ""
+  },
+  {
+   "id": "CHAT-01",
+   "name": "流式问答主流程",
+   "module": "M4 检索问答",
+   "expected": "200，逐段输出，首字 ≤3s",
+   "actual": "code=200 首字=6.5s 总=32.5s 字数=1187",
+   "status": "FAIL",
+   "ms": 32546,
+   "note": ""
+  },
+  {
+   "id": "CHAT-04",
+   "name": "引用来源可追溯",
+   "module": "M4 检索问答",
+   "expected": "答案含来源标注",
+   "actual": "答案含'来源'=True",
+   "status": "PASS",
+   "ms": 0,
+   "note": ""
+  },
+  {
+   "id": "CHAT-02",
+   "name": "多轮上下文追问",
+   "module": "M4 检索问答",
+   "expected": "200 且回应上一轮",
+   "actual": "code=200 字数=3926 总=83.8s",
+   "status": "PASS",
+   "ms": 83821,
+   "note": ""
+  },
+  {
+   "id": "CHAT-06",
+   "name": "空问题被拒",
+   "module": "M4 检索问答",
+   "expected": "422 参数校验",
+   "actual": "200",
+   "status": "FAIL",
+   "ms": 12529,
+   "note": ""
+  },
+  {
+   "id": "CHAT-05",
+   "name": "问答接口限流",
+   "module": "M4 检索问答",
+   "expected": "第 11 次起 429",
+   "actual": "返回码=[200, 200, 200, 200, 200, 200, 200, 200, 200, 429]",
+   "status": "PASS",
+   "ms": 44271,
+   "note": "slowapi 10/minute"
+  },
+  {
+   "id": "DOC-01",
+   "name": "上传 txt 文档",
+   "module": "M3 文档",
+   "expected": "200/202 受理",
+   "actual": "500 {\"code\":500,\"message\":\"服务器内部错误: RabbitMQ 未连接，请先调用 connect()\",\"data\":null}",
+   "status": "FAIL",
+   "ms": 98109,
+   "note": ""
+  },
+  {
+   "id": "DOC-03",
+   "name": "上传不支持格式",
+   "module": "M3 文档",
+   "expected": "4xx 拒绝",
+   "actual": "200 {\"code\":400,\"message\":\"[Error] bad_ctg6j.exe 暂时不支持上传，仅支持 ('.txt', '.do",
+   "status": "FAIL",
+   "ms": 28,
+   "note": ""
+  },
+  {
+   "id": "DOC-05",
+   "name": "文档与切片统计",
+   "module": "M3 文档",
+   "expected": "200 返回统计",
+   "actual": "200 {\"code\":200,\"message\":\"success\",\"data\":{\"doc_count\":9,\"chunk_count\":39,\"recent_files\":[\"sm",
+   "status": "PASS",
+   "ms": 19,
+   "note": ""
+  },
+  {
+   "id": "SESS-01",
+   "name": "会话列表",
+   "module": "M2 会话",
+   "expected": "200 返回数组",
+   "actual": "200 {\"sessions\":[\"demo_exec\",\"rate_probe\"],\"session_meta\":{\"demo_exec\":\"20",
+   "status": "PASS",
+   "ms": 27,
+   "note": ""
+  },
+  {
+   "id": "SESS-02",
+   "name": "读取会话历史",
+   "module": "M2 会话",
+   "expected": "200 且有消息",
+   "actual": "200 长度=5674",
+   "status": "PASS",
+   "ms": 3,
+   "note": ""
+  },
+  {
+   "id": "SESS-06",
+   "name": "不存在会话不串数据",
+   "module": "M2 会话",
+   "expected": "空结果或 404",
+   "actual": "200 长度=15",
+   "status": "PASS",
+   "ms": 13,
+   "note": ""
+  },
+  {
+   "id": "SEC-04",
+   "name": "登录框 SQL 注入",
+   "module": "M6 安全",
+   "expected": "401 无堆栈",
+   "actual": "400 {\"detail\":\"用户或密码错误\"}",
+   "status": "FAIL",
+   "ms": 20,
+   "note": ""
+  },
+  {
+   "id": "SEC-01",
+   "name": "伪造令牌访问",
+   "module": "M6 安全",
+   "expected": "401",
+   "actual": "401",
+   "status": "PASS",
+   "ms": 27,
+   "note": ""
+  },
+  {
+   "id": "CHAT-07",
+   "name": "模型不可用降级",
+   "module": "M4 检索问答",
+   "expected": "明确错误提示",
+   "actual": "未执行：需断网/清空密钥，影响并行用例",
+   "status": "BLOCK",
+   "ms": null,
+   "note": "需断网/清空密钥，影响并行用例"
+  },
+  {
+   "id": "TOOL-01",
+   "name": "报告生成与下载",
+   "module": "M5 交付工具",
+   "expected": "返回报告文件",
+   "actual": "未执行：长链路，验收演示中人工验证",
+   "status": "BLOCK",
+   "ms": null,
+   "note": "长链路，验收演示中人工验证"
+  },
+  {
+   "id": "TOOL-02",
+   "name": "邮件审批拦截",
+   "module": "M5 交付工具",
+   "expected": "弹审批卡片",
+   "actual": "未执行：需前端交互，人工验证",
+   "status": "BLOCK",
+   "ms": null,
+   "note": "需前端交互，人工验证"
+  },
+  {
+   "id": "COMP-01",
+   "name": "浏览器兼容主流程",
+   "module": "兼容性",
+   "expected": "布局与流式正常",
+   "actual": "未执行：需人工视觉验证",
+   "status": "BLOCK",
+   "ms": null,
+   "note": "需人工视觉验证"
+  }
+ ],
+ "summary": {
+  "PASS": 15,
+  "FAIL": 6,
+  "BLOCK": 4,
+  "avg_ms": 13579,
+  "max_ms": 98109
+ }
+}

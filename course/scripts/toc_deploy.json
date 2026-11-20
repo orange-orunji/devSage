@@ -1,0 +1,137 @@
+[
+ {
+  "text": "1  概述",
+  "level": 1,
+  "page": 3
+ },
+ {
+  "text": "1.1  目的",
+  "level": 2,
+  "page": 3
+ },
+ {
+  "text": "1.2  适用范围",
+  "level": 2,
+  "page": 3
+ },
+ {
+  "text": "1.3  术语",
+  "level": 2,
+  "page": 3
+ },
+ {
+  "text": "2  部署架构",
+  "level": 1,
+  "page": 3
+ },
+ {
+  "text": "3  环境要求",
+  "level": 1,
+  "page": 4
+ },
+ {
+  "text": "4  部署前准备",
+  "level": 1,
+  "page": 5
+ },
+ {
+  "text": "4.1  获取源码",
+  "level": 2,
+  "page": 5
+ },
+ {
+  "text": "4.2  配置环境变量",
+  "level": 2,
+  "page": 5
+ },
+ {
+  "text": "4.3  外部服务准备",
+  "level": 2,
+  "page": 5
+ },
+ {
+  "text": "4.4  端口与目录检查",
+  "level": 2,
+  "page": 6
+ },
+ {
+  "text": "5  Docker 一键部署",
+  "level": 1,
+  "page": 6
+ },
+ {
+  "text": "5.1  构建镜像",
+  "level": 2,
+  "page": 6
+ },
+ {
+  "text": "5.2  启动顺序与依赖",
+  "level": 2,
+  "page": 6
+ },
+ {
+  "text": "5.3  首次启动校验",
+  "level": 2,
+  "page": 6
+ },
+ {
+  "text": "6  本地开发部署",
+  "level": 1,
+  "page": 6
+ },
+ {
+  "text": "6.1  Python 环境",
+  "level": 2,
+  "page": 6
+ },
+ {
+  "text": "6.2  前端构建",
+  "level": 2,
+  "page": 7
+ },
+ {
+  "text": "6.3  启动服务",
+  "level": 2,
+  "page": 7
+ },
+ {
+  "text": "7  数据初始化",
+  "level": 1,
+  "page": 7
+ },
+ {
+  "text": "7.1  数据库与检查点",
+  "level": 2,
+  "page": 7
+ },
+ {
+  "text": "7.2  知识库导入",
+  "level": 2,
+  "page": 7
+ },
+ {
+  "text": "7.3  初始账号",
+  "level": 2,
+  "page": 8
+ },
+ {
+  "text": "8  部署后验证",
+  "level": 1,
+  "page": 8
+ },
+ {
+  "text": "9  常见问题处置",
+  "level": 1,
+  "page": 9
+ },
+ {
+  "text": "10  运维与回滚",
+  "level": 1,
+  "page": 9
+ },
+ {
+  "text": "11  附录",
+  "level": 1,
+  "page": 9
+ }
+]
