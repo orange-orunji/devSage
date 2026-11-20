@@ -67,12 +67,12 @@
  {
   "text": "4  页面原型",
   "level": 1,
-  "page": 5
+  "page": 6
  },
  {
   "text": "4.1  登录 / 注册页（W1）",
   "level": 2,
-  "page": 5
+  "page": 6
  },
  {
   "text": "4.2  对话工作台（W2）",
@@ -95,38 +95,43 @@
   "page": 10
  },
  {
+  "text": "4.6  文档管理（W6）",
+  "level": 2,
+  "page": 10
+ },
+ {
   "text": "5  关键交互流程",
   "level": 1,
-  "page": 10
+  "page": 12
  },
  {
   "text": "5.1  首次登录到第一次问答",
   "level": 2,
-  "page": 10
+  "page": 12
  },
  {
   "text": "5.2  文档上传与入库",
   "level": 2,
-  "page": 11
+  "page": 13
  },
  {
   "text": "5.3  审批中断与恢复",
   "level": 2,
-  "page": 11
+  "page": 13
  },
  {
   "text": "6  状态与异常设计",
   "level": 1,
-  "page": 11
+  "page": 13
  },
  {
   "text": "7  响应式与兼容性",
   "level": 1,
-  "page": 12
+  "page": 14
  },
  {
   "text": "8  可用性自检清单",
   "level": 1,
-  "page": 12
+  "page": 14
  }
 ]

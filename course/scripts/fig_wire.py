@@ -196,9 +196,61 @@ def w_upload():
     w.save("wire_upload.png")
 
 
+def w_docs():
+    w = W(1080, 700)
+    w.frame(30, 50, 1020, 600)
+    # 顶栏
+    w.d.rectangle([34, 84, 1046, 128], fill=FILL2, outline=LINE, width=2)
+    w.box(46, 92, 34, 28, "←", 15, fill="white")
+    w.t(96, 106, "文档管理", 15, INK, anchor="lm")
+    w.box(946, 92, 88, 28, "刷新", 11, fill="white")
+    # 指标卡
+    labs = [("10", "知识库文档"), ("40", "知识切片"), ("49", "历史会话"), ("106", "智能回答"), ("2.65MB", "向量库占用")]
+    for i, (v, l) in enumerate(labs):
+        x = 46 + i * 198
+        w.box(x, 142, 186, 66, "", 12, fill="white")
+        w.t(x + 12, 162, v, 18, "#2b6cb0", anchor="lm")
+        w.t(x + 12, 188, l, 11, GRAY, anchor="lm")
+    # 活跃图
+    w.box(46, 222, 950, 120, "", 12, fill="white")
+    w.t(60, 240, "近 7 天活跃会话", 12, INK, anchor="lm")
+    w.t(880, 240, "按会话文件最后修改时间统计", 10, GRAY, anchor="lm")
+    vals = [0, 0, 0, 0, 2, 0, 10]
+    for i, v in enumerate(vals):
+        cx = 120 + i * 118
+        base = 302
+        hh = max(3, v * 4)
+        w.d.rectangle([cx, base - hh, cx + 84, base], fill="#4f8fd0", outline="#4f8fd0")
+        w.t(cx + 42, base + 12, str(v), 10, "#374151")
+        w.t(cx + 42, base + 26, "11-%d" % (14 + i), 9, GRAY)
+    # 表格
+    w.box(46, 366, 950, 232, "", 12, fill="white")
+    w.t(60, 384, "文档清单", 12, INK, anchor="lm")
+    w.box(838, 374, 142, 24, "按文件名筛选…", 10, dash=True)
+    heads = [("#", 70), ("文件名", 110), ("切片数", 700), ("入库时间", 790), ("操作", 950)]
+    for name, x in heads:
+        w.t(x, 418, name, 11, GRAY, anchor="lm")
+    w.line(60, 430, 982, 430, GRAY, 1)
+    rows = [("1", "运维手册_demo.txt", "1", "2026-11-20 13:39:32", "删除"),
+            ("2", "smoke_upload.txt", "1", "2026-08-13 19:12:29", "删除"),
+            ("3", "Redis_1784021277.md", "8", "2026-08-13 00:04:59", "删除")]
+    for i, (no, nm, ck, tm, op) in enumerate(rows):
+        y = 448 + i * 46
+        w.t(70, y, no, 11, INK, anchor="lm")
+        w.t(110, y, nm, 11, INK, anchor="lm")
+        w.t(700, y, ck, 11, INK, anchor="lm")
+        w.t(790, y, tm, 10, GRAY, anchor="lm")
+        w.d.rectangle([930, y - 11, 978, y + 11], fill="#fff5f5", outline="#fecaca", width=1)
+        w.t(954, y, op, 10, "#c53030")
+        w.line(60, y + 24, 982, y + 24, "#f0f1f3", 1)
+    w.t(520, 620, "说明：普通用户该列显示「只读」；删除需二次确认，并同步重建 BM25 索引", 11, GRAY)
+    w.save("wire_docs.png")
+
+
 if __name__ == "__main__":
     w_login()
     w_main()
     w_approval()
     w_settings()
     w_upload()
+    w_docs()
