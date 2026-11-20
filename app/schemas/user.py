@@ -15,6 +15,8 @@ class User(Base):
     display_name = Column(String, default="")   # 昵称（显示用，独立于登录名）
     avatar = Column(String, default="")         # 头像 URL（/avatars/filename.png）
     bio = Column(String, default="")            # 个性签名
+    # ── 角色（2026-11-20 新增）：user 普通用户 / admin 管理员 ──
+    role = Column(String, default="user")
 
 # ── Pydantic 响应模型 ──
 
@@ -31,6 +33,7 @@ class ProfileResponse(BaseModel):
     display_name: str = ""
     avatar: str = ""
     bio: str = ""
+    role: str = "user"
 
 
 class ProfileUpdateRequest(BaseModel):

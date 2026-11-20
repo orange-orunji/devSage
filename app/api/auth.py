@@ -47,7 +47,8 @@ def register(request : AutoRequest,db : Session = Depends(get_db)):
     if first:
         raise  HTTPException(status_code=400,detail="用户已存在")
     # 注册相关用户信息
-    user = User(username=request.username, hashed_password=generate_hash_password(request.password))
+    user = User(username=request.username, hashed_password=generate_hash_password(request.password),
+                role="user")
     db.add(user)
     db.commit()
     return {"message":"用户注册成功"}
@@ -58,7 +59,8 @@ def login(request : AutoRequest,db : Session = Depends(get_db)):
     target_user = db.query(User).filter(User.username == request.username).first()
     if not target_user or not verify_password(request.password,target_user.hashed_password):
         raise  HTTPException(status_code=400,detail="用户或密码错误")
-    token = create_access_token(data={"sub": target_user.username, "user_id": target_user.id})
+    token = create_access_token(data={"sub": target_user.username, "user_id": target_user.id,
+                                     "role": target_user.role or "user"})
     return {"access_token": token, "token_type": "bearer"}
 
 
@@ -74,6 +76,7 @@ def _profile_dict(user: User) -> dict:
         "display_name": user.display_name or "",
         "avatar": user.avatar or "",
         "bio": user.bio or "",
+        "role": user.role or "user",
     }
 
 

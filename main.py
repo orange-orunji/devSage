@@ -17,6 +17,7 @@ from app.api.chat import router as chat_router, limiter
 from app.api.document import router as document_router
 from app.api.auth import router as auth_router
 from app.api.revocation_demo import router as revocation_demo_router
+from app.api.kb import router as kb_router
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.services import vector_store
@@ -84,6 +85,7 @@ async def lifespan(app: FastAPI):
             ("display_name", "VARCHAR DEFAULT ''"),
             ("avatar", "VARCHAR DEFAULT ''"),
             ("bio", "VARCHAR DEFAULT ''"),
+            ("role", "VARCHAR DEFAULT 'user'"),
         ):
             if col not in cols:
                 conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} {ddl}"))
@@ -136,6 +138,7 @@ async def log_requests(request: Request, call_next):
 app.include_router(chat_router, prefix="/api/chat", tags=["对话接口"])
 app.include_router(document_router, prefix="/api/document", tags=["上传文件接口"])
 app.include_router(auth_router, prefix="/api/auth", tags=["用户登录注册相关接口"])
+app.include_router(kb_router, prefix="/api/kb", tags=["知识库管理接口"])
 app.include_router(revocation_demo_router)
 
 

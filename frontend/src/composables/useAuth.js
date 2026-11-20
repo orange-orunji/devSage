@@ -9,17 +9,22 @@ const authed = ref(!!token.value)
 const displayName = ref(localStorage.getItem('display_name') || '')
 const avatarUrl = ref(localStorage.getItem('avatar') || '')
 const bio = ref(localStorage.getItem('bio') || '')
+const role = ref(localStorage.getItem('role') || 'user')
 
 /** 显示名：昵称优先，回退登录名 */
 const shownName = computed(() => displayName.value || username.value)
+/** 是否管理员（文档删除等操作仅管理员可用） */
+const isAdmin = computed(() => role.value === 'admin')
 
-function setProfileCache(dn, av, b) {
+function setProfileCache(dn, av, b, r) {
     displayName.value = dn
     avatarUrl.value = av
     bio.value = b
+    role.value = r || 'user'
     localStorage.setItem('display_name', dn)
     localStorage.setItem('avatar', av)
     localStorage.setItem('bio', b)
+    localStorage.setItem('role', role.value)
 }
 
 function setAuth(t, u) {
@@ -84,7 +89,7 @@ async function fetchProfile() {
         const resp = await apiFetch('/api/auth/me')
         if (!resp.ok) return
         const data = await resp.json()
-        setProfileCache(data.display_name || '', data.avatar || '', data.bio || '')
+        setProfileCache(data.display_name || '', data.avatar || '', data.bio || '', data.role || 'user')
     } catch (err) {
         console.warn('资料加载失败:', err)
     }
@@ -99,7 +104,7 @@ async function updateProfile({ display_name, bio: newBio }) {
     })
     const data = await resp.json().catch(() => ({}))
     if (!resp.ok) throw new Error(data.detail || '保存失败')
-    setProfileCache(data.display_name || '', data.avatar || '', data.bio || '')
+    setProfileCache(data.display_name || '', data.avatar || '', data.bio || '', data.role || 'user')
 }
 
 /** 上传头像（File 对象；不手动设置 Content-Type，由浏览器带 multipart boundary） */
@@ -129,6 +134,7 @@ async function changePassword(oldPassword, newPassword) {
 
 export function useAuth() {
     return {
+        role, isAdmin,
         token, username, authed, shownName, displayName, avatarUrl, bio,
         setAuth, logout, loginOrRegister, authHeaders, apiFetch,
         fetchProfile, updateProfile, uploadAvatar, changePassword,
