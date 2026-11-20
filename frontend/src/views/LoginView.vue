@@ -48,8 +48,8 @@ async function onSubmit() {
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                 </svg>
             </div>
-            <h1>DevSage · 研发智库</h1>
-            <p class="auth-brand-desc">面向研发团队的技术知识库 Agent，<br>让团队知识触手可及。</p>
+            <h1>智维台 · OpsDesk</h1>
+            <p class="auth-brand-desc">面向企业 IT 服务台的智能知识协同系统，<br>让知识触手可及。</p>
             <ul class="auth-brand-points">
                 <li>文档检索与智能问答</li>
                 <li>多轮对话上下文理解</li>

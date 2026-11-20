@@ -434,7 +434,7 @@ onBeforeUnmount(() => {
                             <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                         </svg>
                     </div>
-                    <h2>你好，{{ shownName || '朋友' }}！我是 DevSage，你的研发知识库助手</h2>
+                    <h2>你好，{{ shownName || '朋友' }}！我是智维台，你的知识库与交付助手</h2>
                     <p>知识检索 · 报告生成 · 邮件审批 · 格式转换 · 拖拽文件即可入库</p>
                 </div>
                 <div v-if="kbStats" class="overview-cards">
