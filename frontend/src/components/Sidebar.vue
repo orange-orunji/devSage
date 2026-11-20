@@ -6,7 +6,7 @@ import { useSessions } from '../composables/useSessions'
 const props = defineProps({
     open: { type: Boolean, default: false },
 })
-const emit = defineEmits(['close', 'open-settings'])
+const emit = defineEmits(['close', 'open-settings', 'open-documents'])
 
 const { logout, shownName, avatarUrl, bio } = useAuth()
 const {
@@ -169,6 +169,15 @@ async function onDelete(sessionId) {
         </div>
 
         <div class="upload-area">
+            <button class="btn-kb-manage" @click="emit('open-documents')" title="查看文档清单、切片数与删除">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    <line x1="9" y1="8" x2="16" y2="8"/>
+                    <line x1="9" y1="12" x2="16" y2="12"/>
+                </svg>
+                文档管理
+            </button>
             <div class="sidebar-section-label">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
