@@ -52,11 +52,6 @@ class settings(BaseSettings):
     CHROMA_DIR: str = str(BASE_DIR / "app/data/storage/chroma_db")
     CHROMA_NAME: str = "enterprise_knowledge"
 
-    # ── HyDE 开关（首字延迟优化，2026-11-20）──
-    # auto: 仅语义类且足够长的问题用 HyDE；on: 全部启用；off: 全部禁用
-    HYDE_MODE: str = "auto"
-    HYDE_MIN_CHARS: int = 15
-
     # ── md5 配置 ──
     MD5_PATH: str = str(BASE_DIR / "app/data/storage/md5_records.txt")
 
